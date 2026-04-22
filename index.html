@@ -471,6 +471,7 @@
 const U='umido', P='plastica', C='carta', V='vetro e lattine', S='secco', _=null;
 
 const CALENDARIO = {
+  4:  [P,U,_,U,_,U,_,C,U,S,U,_,V,U,P,U,_,U,_,U,C,U,S,U,_,_,V,U,P,U],
   5:  [_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_],
   6:  [U,_,C,U,S,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U],
   7:  [S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_],
@@ -485,7 +486,7 @@ const MESI_IT = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
                  'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 
 const ICONS = { umido:'🍃', plastica:'♻️', carta:'📄', 'vetro e lattine':'🍶', secco:'🗑️' };
-const MESI_DISP = [5,6,7,8,9,10,11,12];
+const MESI_DISP = [4,5,6,7,8,9,10,11,12];
 
 function getRifiuto(mese, giorno) {
   const arr = CALENDARIO[mese];
