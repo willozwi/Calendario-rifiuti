@@ -1,0 +1,19 @@
+{
+  "name": "Raccolta Differenziata SGM 2026",
+  "short_name": "Rifiuti SGM",
+  "description": "Calendario raccolta differenziata San Gavino Monreale 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f1",
+  "theme_color": "#1a3a2a",
+  "orientation": "portrait-primary",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
