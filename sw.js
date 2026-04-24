@@ -38,12 +38,21 @@ self.addEventListener('message', async (event) => {
   const data = event.data;
   if (!data || !data.type) return;
 
+  // Reply either to MessageChannel port (event.ports[0]) or to the sending client
+  const reply = (msg) => {
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage(msg);
+    } else if (event.source && event.source.postMessage) {
+      event.source.postMessage(msg);
+    }
+  };
+
   if (data.type === 'SCHEDULE_NOTIFICATIONS') {
     const supportsTriggers = 'showTrigger' in Notification.prototype;
     await cancelScheduled();
 
     if (!supportsTriggers) {
-      if (event.source) event.source.postMessage({ type: 'SCHEDULE_RESULT', supported: false, count: 0 });
+      reply({ type: 'SCHEDULE_RESULT', supported: false, count: 0 });
       return;
     }
 
@@ -63,7 +72,7 @@ self.addEventListener('message', async (event) => {
         console.warn('schedule fail', err);
       }
     }
-    if (event.source) event.source.postMessage({ type: 'SCHEDULE_RESULT', supported: true, count });
+    reply({ type: 'SCHEDULE_RESULT', supported: true, count });
   }
 
   if (data.type === 'CANCEL_NOTIFICATIONS') {
