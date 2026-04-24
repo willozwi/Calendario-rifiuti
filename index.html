@@ -428,7 +428,8 @@
       </div>
       <input type="time" id="notif-time" value="21:00">
     </div>
-    <button class="btn btn-primary" onclick="attivaNotifiche()">🔔 Attiva Notifiche</button>
+    <button class="btn btn-primary" onclick="attivaNotifiche()">🔔 Attiva / Aggiorna Notifiche</button>
+    <button class="btn" style="background:#f3f4f6;color:var(--text);margin-top:8px" onclick="disattivaNotifiche()">Disattiva</button>
     <div class="notif-msg" id="notif-msg"></div>
     <p style="font-size:.68rem;color:var(--muted);margin-top:10px;line-height:1.4;font-weight:600">
       ⚠️ Per ricevere notifiche anche con l'app in background, l'app deve essere installata e aperta almeno una volta al giorno.
@@ -614,34 +615,99 @@ function showView(name, el) {
 }
 
 // ── NOTIFICHE ─────────────────────────────────────────────────
-let notifTimer = null;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-function scheduleNotifica(timeStr) {
-  if (notifTimer) clearTimeout(notifTimer);
+function buildNotificationsList(timeStr, daysAhead = 60) {
   const [h, m] = timeStr.split(':').map(Number);
   const now = new Date();
+  const list = [];
+
+  for (let off = 0; off < daysAhead; off++) {
+    const trigger = new Date(now);
+    trigger.setDate(now.getDate() + off);
+    trigger.setHours(h, m, 0, 0);
+    if (trigger <= now) continue;
+
+    const dom = new Date(trigger);
+    dom.setDate(trigger.getDate() + 1);
+    if (dom.getFullYear() !== 2026) continue;
+
+    const r = getRifiuto(dom.getMonth() + 1, dom.getDate());
+    if (!r) continue;
+
+    const fmt = dom.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+    const key = `${trigger.getFullYear()}-${String(trigger.getMonth()+1).padStart(2,'0')}-${String(trigger.getDate()).padStart(2,'0')}`;
+
+    list.push({
+      title: '♻️ Raccolta Rifiuti',
+      body: `${cap(fmt)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`,
+      tag: `rifiuti-${key}`,
+      timestamp: trigger.getTime(),
+      icon: 'icon.svg'
+    });
+  }
+  return list;
+}
+
+function postToSW(msg) {
+  return navigator.serviceWorker.ready.then(reg => {
+    const target = reg.active || navigator.serviceWorker.controller;
+    if (target) target.postMessage(msg);
+    return reg;
+  });
+}
+
+async function scheduleAllNotifications(timeStr) {
+  if (!('serviceWorker' in navigator)) return { supported: false, count: 0 };
+  const reg = await navigator.serviceWorker.ready;
+  const target = reg.active || navigator.serviceWorker.controller;
+  if (!target) return { supported: false, count: 0 };
+
+  const notifications = buildNotificationsList(timeStr);
+
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timeout = setTimeout(() => resolve({ supported: false, count: 0 }), 5000);
+    channel.port1.onmessage = (e) => {
+      clearTimeout(timeout);
+      if (e.data && e.data.type === 'SCHEDULE_RESULT') {
+        resolve({ supported: !!e.data.supported, count: e.data.count || 0 });
+      }
+    };
+    target.postMessage({ type: 'SCHEDULE_NOTIFICATIONS', notifications }, [channel.port2]);
+  });
+}
+
+async function catchUpNotification() {
+  const timeStr = localStorage.getItem('notif-time');
+  const active = localStorage.getItem('notif-active') === '1';
+  if (!timeStr || !active) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  if (localStorage.getItem('notif-last-shown') === todayKey) return;
+
+  const [h, m] = timeStr.split(':').map(Number);
   const target = new Date(now);
   target.setHours(h, m, 0, 0);
-  if (target <= now) target.setDate(target.getDate() + 1);
+  if (now < target) return;
 
-  const delay = target - now;
+  const dom = new Date(now);
+  dom.setDate(now.getDate() + 1);
+  if (dom.getFullYear() !== 2026) return;
+  const r = getRifiuto(dom.getMonth() + 1, dom.getDate());
+  if (!r) return;
 
-  notifTimer = setTimeout(() => {
-    const dom = new Date(target);
-    dom.setDate(dom.getDate() + 1);
-    if (dom.getFullYear() === 2026) {
-      const r = getRifiuto(dom.getMonth() + 1, dom.getDate());
-      if (r) {
-        const fmt = dom.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
-        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-        new Notification('♻️ Raccolta Rifiuti', {
-          body: `${cap(fmt)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`,
-          icon: 'icon.svg'
-        });
-      }
-    }
-    scheduleNotifica(timeStr); // rischedula per il giorno dopo
-  }, delay);
+  const fmt = dom.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+  await postToSW({
+    type: 'SHOW_NOW',
+    title: '♻️ Raccolta Rifiuti (recupero)',
+    body: `${cap(fmt)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`,
+    tag: `rifiuti-catchup-${todayKey}`,
+    icon: 'icon.svg'
+  });
+  localStorage.setItem('notif-last-shown', todayKey);
 }
 
 async function attivaNotifiche() {
@@ -659,35 +725,65 @@ async function attivaNotifiche() {
 
   const timeStr = document.getElementById('notif-time').value || '21:00';
 
-  if (perm === 'granted') {
-    scheduleNotifica(timeStr);
+  if (perm !== 'granted') {
+    if (perm === 'denied') {
+      msgEl.className = 'notif-msg err';
+      msgEl.textContent = '✕ Permesso negato. Abilita le notifiche nelle impostazioni del browser.';
+    } else {
+      msgEl.className = 'notif-msg warn';
+      msgEl.textContent = '⚠ Permesso notifiche non concesso.';
+    }
+    return;
+  }
+
+  localStorage.setItem('notif-time', timeStr);
+  localStorage.setItem('notif-active', '1');
+
+  const { supported, count } = await scheduleAllNotifications(timeStr);
+
+  if (supported && count > 0) {
     msgEl.className = 'notif-msg ok';
-    msgEl.textContent = `✓ Notifica attiva ogni sera alle ${timeStr}`;
-    localStorage.setItem('notif-time', timeStr);
-    localStorage.setItem('notif-active', '1');
-  } else if (perm === 'denied') {
-    msgEl.className = 'notif-msg err';
-    msgEl.textContent = '✕ Permesso negato. Vai in Impostazioni > Browser > Notifiche per abilitarle.';
+    msgEl.textContent = `✓ Programmate ${count} notifiche. Riceverai un avviso ogni sera alle ${timeStr}, anche ad app chiusa.`;
+  } else if (supported) {
+    msgEl.className = 'notif-msg warn';
+    msgEl.textContent = `⚠ Nessuna raccolta da notificare nei prossimi 60 giorni.`;
   } else {
     msgEl.className = 'notif-msg warn';
-    msgEl.textContent = '⚠ Permesso notifiche non concesso.';
+    msgEl.textContent = `⚠ Notifiche attive alle ${timeStr}, ma il browser non supporta la programmazione in background (tipico di iOS/Safari). Apri l'app ogni giorno per vedere il promemoria.`;
   }
 }
 
+async function disattivaNotifiche() {
+  localStorage.removeItem('notif-active');
+  await postToSW({ type: 'CANCEL_NOTIFICATIONS' });
+  const msgEl = document.getElementById('notif-msg');
+  msgEl.style.display = 'block';
+  msgEl.className = 'notif-msg warn';
+  msgEl.textContent = 'Notifiche disattivate.';
+}
+
 // ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   renderOggi();
   initMonthIdx();
 
   const savedTime = localStorage.getItem('notif-time');
   if (savedTime) document.getElementById('notif-time').value = savedTime;
 
-  if (localStorage.getItem('notif-active') === '1' && Notification.permission === 'granted') {
-    scheduleNotifica(savedTime || '21:00');
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('sw.js');
+      await navigator.serviceWorker.ready;
+    } catch (e) {
+      console.warn('SW:', e);
+    }
   }
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e));
+  if (localStorage.getItem('notif-active') === '1' &&
+      'Notification' in window &&
+      Notification.permission === 'granted') {
+    await catchUpNotification();
+    scheduleAllNotifications(savedTime || '21:00');
   }
 });
 </script>
