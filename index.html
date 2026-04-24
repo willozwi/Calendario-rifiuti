@@ -42,7 +42,6 @@
       overscroll-behavior: none;
     }
 
-    /* ── HEADER ── */
     header {
       background: var(--primary);
       color: #fff;
@@ -59,7 +58,6 @@
     header h1 { font-size: 1rem; font-weight: 800; letter-spacing: -.2px; }
     header p  { font-size: .7rem; opacity: .65; margin-top: 1px; }
 
-    /* ── TAB BAR ── */
     .tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -89,11 +87,9 @@
     .tab.active { color: var(--primary); }
     .tab.active .tab-icon { filter: drop-shadow(0 0 4px rgba(26,58,42,.3)); }
 
-    /* ── VIEWS ── */
     .view { display: none; padding: 14px; }
     .view.active { display: block; }
 
-    /* ── CARDS ── */
     .card {
       background: var(--card);
       border-radius: var(--radius);
@@ -116,7 +112,6 @@
       font-weight: 600;
     }
 
-    /* ── RIFIUTO BADGE ── */
     .rifiuto-pill {
       display: inline-flex;
       align-items: center;
@@ -135,7 +130,6 @@
     .rifiuto-pill.secco   { background: var(--secco); }
     .rifiuto-pill.nessuno { background: #e9ecef; color: #6b7280; }
 
-    /* ── AVVISO ORARIO ── */
     .avviso {
       display: flex;
       align-items: flex-start;
@@ -151,7 +145,6 @@
     }
     .avviso-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
 
-    /* ── CALENDAR GRID ── */
     .month-nav {
       display: flex;
       align-items: center;
@@ -246,7 +239,6 @@
     .cal-chip.vetro   { background: var(--vetro);    color: #fff; }
     .cal-chip.secco   { background: var(--secco);    color: #fff; }
 
-    /* ── LEGENDA ── */
     .legend {
       display: flex;
       flex-wrap: wrap;
@@ -270,7 +262,6 @@
     .leg-dot.vetro   { background: var(--vetro); }
     .leg-dot.secco   { background: var(--secco); }
 
-    /* ── SETTINGS ── */
     .setting-row {
       display: flex;
       align-items: center;
@@ -322,7 +313,6 @@
     .notif-msg.err  { background: #fee2e2; color: #7f1d1d; }
     .notif-msg.warn { background: #fef9c3; color: #713f12; }
 
-    /* ── PROSSIME ── */
     .prox-item {
       display: flex;
       align-items: center;
@@ -360,7 +350,6 @@
   </div>
 </header>
 
-<!-- VIEW: OGGI -->
 <div id="view-oggi" class="view active">
 
   <div class="card">
@@ -392,7 +381,6 @@
 
 </div>
 
-<!-- VIEW: MESE -->
 <div id="view-mese" class="view">
   <div class="month-nav">
     <button class="nav-btn" id="btn-prev" onclick="changeMonth(-1)">‹</button>
@@ -413,7 +401,6 @@
   </div>
 </div>
 
-<!-- VIEW: IMPOSTAZIONI -->
 <div id="view-impostazioni" class="view">
 
   <div class="card">
@@ -454,7 +441,6 @@
 
 </div>
 
-<!-- TAB BAR -->
 <nav class="tab-bar">
   <button class="tab active" id="tab-oggi" onclick="showView('oggi',this)">
     <span class="tab-icon">🏠</span>Oggi
@@ -468,7 +454,6 @@
 </nav>
 
 <script>
-// ── DATI CALENDARIO ──────────────────────────────────────────────
 const U='umido', P='plastica', C='carta', V='vetro e lattine', S='secco', _=null;
 
 const CALENDARIO = {
@@ -506,7 +491,6 @@ function makePill(r) {
   return `<span class="rifiuto-pill ${cls}">${ICONS[r]} ${cap}</span>`;
 }
 
-// ── VIEW OGGI ──────────────────────────────────────────────────
 function renderOggi() {
   const oggi = new Date();
   const domani = new Date();
@@ -526,7 +510,6 @@ function renderOggi() {
   document.getElementById('avviso-domani').style.display = rD ? 'flex' : 'none';
 }
 
-// ── VIEW MESE ─────────────────────────────────────────────────
 let currentMonthIdx = 0;
 
 function initMonthIdx() {
@@ -549,8 +532,8 @@ function renderCalendar() {
   document.getElementById('btn-next').disabled = currentMonthIdx === MESI_DISP.length - 1;
 
   const daysInMonth = new Date(2026, m, 0).getDate();
-  const firstDow    = new Date(2026, m - 1, 1).getDay(); // 0=Dom
-  const startOffset = firstDow === 0 ? 6 : firstDow - 1; // Mon-first
+  const firstDow    = new Date(2026, m - 1, 1).getDay();
+  const startOffset = firstDow === 0 ? 6 : firstDow - 1;
 
   const todayM = new Date().getMonth() + 1;
   const todayD = new Date().getDate();
@@ -580,7 +563,6 @@ function renderCalendar() {
   document.getElementById('cal-body').innerHTML = html;
 }
 
-// ── VIEW IMPOSTAZIONI ─────────────────────────────────────────
 function renderProssime() {
   const oggi = new Date();
   let html = '', count = 0;
@@ -604,7 +586,6 @@ function renderProssime() {
   document.getElementById('prox-list').innerHTML = html || '<p style="color:var(--muted);font-size:.8rem;font-weight:600">Nessuna raccolta nelle prossime settimane</p>';
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────
 function showView(name, el) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -614,7 +595,6 @@ function showView(name, el) {
   if (name === 'impostazioni') renderProssime();
 }
 
-// ── NOTIFICHE ─────────────────────────────────────────────────
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 function buildNotificationsList(timeStr, daysAhead = 60) {
@@ -762,7 +742,6 @@ async function disattivaNotifiche() {
   msgEl.textContent = 'Notifiche disattivate.';
 }
 
-// ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   renderOggi();
   initMonthIdx();
