@@ -187,7 +187,7 @@ function viewImpost(){
     ${notifOn?`<div class="riga"><div><div class="t">Orario notifica</div><div class="s">Ogni sera, per la raccolta di domani</div></div>
       <input type="time" id="orario" value="${notifTime}"></div>`:''}
     ${msg?`<div class="msg ${msg.kind}">${msg.text}</div>`:''}
-    <p class="fineprint">⚠️ Per ricevere notifiche anche con l'app in background, l'app deve essere installata e aperta almeno una volta al giorno.</p>
+    <p class="fineprint">⚠️ Su Android, con l'app installata dalla schermata Home, il promemoria arriva anche ad app chiusa (una volta al giorno, orario deciso dal sistema). Aprire l'app ogni tanto aiuta a mantenerlo attivo.</p>
   </div>
   <div class="card"><div class="lbl" style="margin-bottom:6px">👁 Accessibilità</div>
     <div class="riga" style="border:none;padding-bottom:2px"><div><div class="t">Testo grande</div><div class="s">Ingrandisce tutti i testi dell'app</div></div>
@@ -234,8 +234,27 @@ function render(){
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;localStorage.setItem('sgm2-tab',tab);render()});
 
+async function salvaPerSW(){
+  try{
+    const c=await caches.open('sgm-settings');
+    const prev=await c.match('./settings');
+    const old=prev?await prev.json():{};
+    await c.put('./settings',new Response(JSON.stringify({notifOn,notifTime,lastNotifDate:old.lastNotifDate||null})));
+  }catch(e){}
+}
+async function registraSyncPeriodico(){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    if('periodicSync' in reg){
+      const perm=await navigator.permissions.query({name:'periodic-background-sync'});
+      if(perm.state==='granted')await reg.periodicSync.register('sgm-daily',{minInterval:6*60*60*1000});
+    }
+  }catch(e){}
+}
 let notifTimer=null;
 function pianifica(){
+  salvaPerSW();
+  if(notifOn)registraSyncPeriodico();
   if(notifTimer)clearTimeout(notifTimer);
   if(!notifOn||Notification.permission!=='granted')return;
   const [h,m]=notifTime.split(':').map(Number);
@@ -249,8 +268,10 @@ function pianifica(){
     (async()=>{
       try{
         const reg=await navigator.serviceWorker.getRegistration();
-        if(reg)await reg.showNotification('♻️ Raccolta Rifiuti',{body,icon:'icon-192.png',badge:'icon-192.png'});
+        if(reg)await reg.showNotification('♻️ Raccolta Rifiuti',{body,icon:'icon-192.png',badge:'icon-192.png',tag:'sgm-promemoria'});
         else new Notification('♻️ Raccolta Rifiuti',{body,icon:'icon-192.png'});
+        const c=await caches.open('sgm-settings');const prev=await c.match('./settings');const old=prev?await prev.json():{};
+        await c.put('./settings',new Response(JSON.stringify({notifOn,notifTime,lastNotifDate:new Date().toDateString()})));
       }catch(e){}
     })();
     pianifica();
@@ -258,7 +279,14 @@ function pianifica(){
 }
 pianifica();
 render();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>{
+    if(notifOn&&Notification.permission==='granted'){
+      registraSyncPeriodico();
+      navigator.serviceWorker.ready.then(reg=>reg.active&&reg.active.postMessage('sgm-check'));
+    }
+  });
+}
 </script>
 </body>
 </html>
