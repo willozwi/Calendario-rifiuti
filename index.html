@@ -1,770 +1,264 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Rifiuti SGM 2026</title>
-  <meta name="theme-color" content="#1a3a2a">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Rifiuti SGM">
-  <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --umido:   #5d4037;
-      --plastica:#e6a817;
-      --carta:   #1155cc;
-      --vetro:   #2e7d32;
-      --secco:   #546e7a;
-      --primary: #1a3a2a;
-      --primary-light: #2d6a4f;
-      --bg:      #f0f2f1;
-      --card:    #ffffff;
-      --text:    #1a1a1a;
-      --muted:   #6b7280;
-      --border:  #e5e7eb;
-      --radius:  14px;
-      --tab-h:   64px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      font-family: 'Nunito', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: calc(var(--tab-h) + 12px);
-      overscroll-behavior: none;
-    }
-
-    header {
-      background: var(--primary);
-      color: #fff;
-      padding: 14px 18px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      box-shadow: 0 2px 12px rgba(0,0,0,.3);
-    }
-    .header-icon { font-size: 1.6rem; }
-    header h1 { font-size: 1rem; font-weight: 800; letter-spacing: -.2px; }
-    header p  { font-size: .7rem; opacity: .65; margin-top: 1px; }
-
-    .tab-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: var(--tab-h);
-      background: #fff;
-      display: flex;
-      box-shadow: 0 -1px 0 var(--border), 0 -4px 20px rgba(0,0,0,.07);
-      z-index: 50;
-    }
-    .tab {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: .6rem;
-      font-weight: 700;
-      letter-spacing: .2px;
-      border: none;
-      background: none;
-      transition: color .15s;
-    }
-    .tab .tab-icon { font-size: 1.35rem; line-height: 1; }
-    .tab.active { color: var(--primary); }
-    .tab.active .tab-icon { filter: drop-shadow(0 0 4px rgba(26,58,42,.3)); }
-
-    .view { display: none; padding: 14px; }
-    .view.active { display: block; }
-
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
-    }
-    .card-label {
-      font-size: .65rem;
-      font-weight: 800;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-    .card-date {
-      font-size: .78rem;
-      color: var(--muted);
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    .rifiuto-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      border-radius: 100px;
-      font-size: .95rem;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -.2px;
-    }
-    .rifiuto-pill.umido   { background: var(--umido); }
-    .rifiuto-pill.plastica{ background: var(--plastica); color: #1a1a1a; }
-    .rifiuto-pill.carta   { background: var(--carta); }
-    .rifiuto-pill.vetro   { background: var(--vetro); }
-    .rifiuto-pill.secco   { background: var(--secco); }
-    .rifiuto-pill.nessuno { background: #e9ecef; color: #6b7280; }
-
-    .avviso {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 10px;
-      padding: 10px 12px;
-      margin-top: 12px;
-      font-size: .75rem;
-      color: #78350f;
-      line-height: 1.4;
-    }
-    .avviso-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-
-    .month-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--card);
-      padding: 12px 16px;
-      border-radius: var(--radius);
-      margin-bottom: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    .month-nav h2 { font-size: 1.05rem; font-weight: 800; }
-    .nav-btn {
-      background: var(--bg);
-      border: none;
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      font-size: 1.1rem;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
-      font-weight: 700;
-      transition: background .15s;
-    }
-    .nav-btn:active { background: #d1fae5; }
-    .nav-btn:disabled { opacity: .3; cursor: default; }
-
-    .cal-wrapper {
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    .cal-header {
-      display: grid;
-      grid-template-columns: repeat(7,1fr);
-      background: var(--primary);
-    }
-    .cal-dh {
-      text-align: center;
-      padding: 8px 2px;
-      font-size: .6rem;
-      font-weight: 800;
-      color: rgba(255,255,255,.85);
-      letter-spacing: .3px;
-    }
-    .cal-dh:last-child { color: #86efac; }
-
-    .cal-body {
-      display: grid;
-      grid-template-columns: repeat(7,1fr);
-    }
-    .cal-cell {
-      min-height: 50px;
-      border-right: 1px solid #f3f4f6;
-      border-bottom: 1px solid #f3f4f6;
-      padding: 4px 3px 3px;
-      position: relative;
-    }
-    .cal-cell.empty { background: #fafafa; }
-    .cal-cell.is-dom { background: #f0fdf4; }
-    .cal-cell.is-today {
-      outline: 2.5px solid var(--primary-light);
-      outline-offset: -2px;
-      background: #f0fdf4;
-      z-index: 1;
-    }
-    .cal-num {
-      font-size: .68rem;
-      font-weight: 700;
-      color: var(--muted);
-      display: block;
-      line-height: 1;
-    }
-    .cal-cell.is-dom .cal-num { color: #16a34a; }
-    .cal-cell.is-today .cal-num { color: var(--primary); font-weight: 800; }
-    .cal-chip {
-      display: block;
-      margin-top: 3px;
-      border-radius: 4px;
-      padding: 2px 2px;
-      font-size: .5rem;
-      font-weight: 800;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      letter-spacing: -.3px;
-    }
-    .cal-chip.umido   { background: var(--umido);    color: #fff; }
-    .cal-chip.plastica{ background: var(--plastica); color: #1a1a1a; }
-    .cal-chip.carta   { background: var(--carta);    color: #fff; }
-    .cal-chip.vetro   { background: var(--vetro);    color: #fff; }
-    .cal-chip.secco   { background: var(--secco);    color: #fff; }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
-    }
-    .leg-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .72rem;
-      font-weight: 700;
-    }
-    .leg-dot {
-      width: 11px; height: 11px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .leg-dot.umido   { background: var(--umido); }
-    .leg-dot.plastica{ background: var(--plastica); }
-    .leg-dot.carta   { background: var(--carta); }
-    .leg-dot.vetro   { background: var(--vetro); }
-    .leg-dot.secco   { background: var(--secco); }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .setting-row:last-of-type { border-bottom: none; }
-    .setting-lbl { font-size: .83rem; font-weight: 700; }
-    .setting-sub { font-size: .68rem; color: var(--muted); margin-top: 2px; font-weight: 600; }
-
-    input[type="time"] {
-      font-family: inherit;
-      font-weight: 700;
-      font-size: .83rem;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 7px 10px;
-      color: var(--text);
-      background: var(--bg);
-    }
-
-    .btn {
-      font-family: inherit;
-      font-weight: 800;
-      font-size: .88rem;
-      border: none;
-      padding: 13px;
-      border-radius: 12px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 10px;
-      letter-spacing: -.2px;
-      transition: opacity .15s, transform .1s;
-    }
-    .btn:active { opacity: .85; transform: scale(.98); }
-    .btn-primary { background: var(--primary); color: #fff; }
-
-    .notif-msg {
-      margin-top: 10px;
-      border-radius: 10px;
-      padding: 10px 13px;
-      font-size: .76rem;
-      font-weight: 700;
-      text-align: center;
-      display: none;
-    }
-    .notif-msg.ok   { background: #dcfce7; color: #14532d; }
-    .notif-msg.err  { background: #fee2e2; color: #7f1d1d; }
-    .notif-msg.warn { background: #fef9c3; color: #713f12; }
-
-    .prox-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .prox-item:last-child { border-bottom: none; }
-    .prox-date { font-size: .72rem; font-weight: 700; color: var(--muted); width: 90px; flex-shrink: 0; }
-    .prox-chip {
-      font-size: .72rem;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 100px;
-      color: #fff;
-      white-space: nowrap;
-    }
-    .prox-chip.umido   { background: var(--umido); }
-    .prox-chip.plastica{ background: var(--plastica); color: #1a1a1a; }
-    .prox-chip.carta   { background: var(--carta); }
-    .prox-chip.vetro   { background: var(--vetro); }
-    .prox-chip.secco   { background: var(--secco); }
-
-    .info-row { font-size: .78rem; line-height: 1.7; color: #374151; }
-    .info-row strong { color: var(--primary); }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1a3a2a">
+<title>Rifiuti SGM — Raccolta Differenziata 2026</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'Nunito',sans-serif;background:#f0f2f1;color:#1f2937;display:flex;flex-direction:column}
+a{color:#2d6a4f;font-weight:800}
+header{background:#1a3a2a;color:#fff;padding:16px 18px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.3);z-index:50;flex-shrink:0}
+header .logo{width:42px;height:42px;border-radius:11px;background:#2d6a4f;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+header h1{font-size:19px;font-weight:800;letter-spacing:-.2px;line-height:1.15}
+header p{font-size:13px;font-weight:600;opacity:.8;margin-top:2px}
+main{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 14px 20px}
+body.testo-lg main{zoom:1.15}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+.lbl{font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#4b5563;margin-bottom:4px}
+.data{font-size:15px;color:#4b5563;font-weight:700;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:10px;border-radius:100px;font-weight:800;letter-spacing:-.2px;padding:13px 22px;font-size:18px;color:#fff}
+.pill .ico{font-size:22px}
+.blocco{display:flex;align-items:center;gap:14px;border-radius:14px;padding:18px 20px;color:#fff}
+.blocco .ico{font-size:36px;line-height:1}
+.blocco .nome{font-size:21px;font-weight:800;letter-spacing:-.2px;line-height:1.2}
+.blocco .sub{font-size:14px;font-weight:700;opacity:.85;margin-top:2px}
+.avviso{display:flex;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;font-weight:600;color:#78350f;line-height:1.45}
+.avviso .ico{font-size:18px;flex-shrink:0}
+.legenda{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.leg-item{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700}
+.leg-dot{width:15px;height:15px;border-radius:50%;flex-shrink:0}
+.mese-nav{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:12px 14px;border-radius:16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.mese-nav h2{font-size:19px;font-weight:800;letter-spacing:-.2px}
+.nav-btn{background:#f0f2f1;border:none;width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1a3a2a;font-weight:700;font-family:inherit;transition:background .15s}
+.nav-btn:active{background:#d1fae5}
+.nav-btn:disabled{opacity:.3}
+.cal{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:12px}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);background:#1a3a2a}
+.cal-dh{text-align:center;padding:10px 2px;font-size:12px;font-weight:800;letter-spacing:.3px;color:rgba(255,255,255,.85)}
+.cal-dh.dom{color:#a7f3d0}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
+.cell{min-height:58px;border-right:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6;padding:5px 4px 4px;background:#fff}
+.cell.vuota{background:#fafafa}
+.cell.dom{background:#e8f5ee}
+.cell.oggi{outline:2.5px solid #2d6a4f;outline-offset:-2.5px;background:#e8f5ee}
+.cell .num{font-size:13px;font-weight:800;display:block;line-height:1;color:#4b5563}
+.cell.dom .num{color:#2e7d32}
+.cell.oggi .num{color:#1a3a2a}
+.chip{display:block;margin-top:4px;border-radius:5px;padding:3px 2px;font-size:10.5px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px;color:#fff}
+.leg-inline{display:flex;flex-wrap:wrap;gap:8px 16px}
+.leg-inline .leg-item{font-size:13.5px}
+.helper{font-size:15px;color:#374151;line-height:1.5;font-weight:600;margin-bottom:6px}
+.riga{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #e5e7eb}
+.riga:last-of-type{border-bottom:none}
+.riga .t{font-size:16px;font-weight:800;color:#111827}
+.riga .s{font-size:13.5px;color:#4b5563;margin-top:2px;font-weight:600}
+.switch{width:54px;height:33px;border-radius:100px;position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;background:#d1d5db;border:none;padding:0}
+.switch.on{background:#2d6a4f}
+.switch .knob{position:absolute;top:3px;left:3px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+.switch.on .knob{left:24px}
+input[type=time]{font-family:inherit;font-weight:800;font-size:17px;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;color:#111827;background:#f0f2f1;min-height:44px}
+.msg{border-radius:12px;padding:12px 14px;font-size:14.5px;font-weight:700;text-align:center;margin-top:4px}
+.msg.ok{background:#dcfce7;color:#14532d}
+.msg.warn{background:#fef9c3;color:#713f12}
+.msg.err{background:#fee2e2;color:#7f1d1d}
+.fineprint{margin-top:12px;font-size:13px;color:#4b5563;line-height:1.45;font-weight:600}
+.prox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #f3f4f6}
+.prox:last-child{border-bottom:none}
+.prox .d{font-size:14.5px;font-weight:700;color:#374151}
+.prox .c{font-size:14px;font-weight:800;padding:6px 14px;border-radius:100px;white-space:nowrap;color:#fff}
+.info{font-size:15px;line-height:1.7;color:#374151;font-weight:600}
+.info strong{color:#1a3a2a}
+.tel{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;background:#1a3a2a;color:#fff;text-decoration:none;font-size:17px;font-weight:800;padding:14px;border-radius:12px;letter-spacing:-.2px;transition:opacity .15s,transform .1s}
+.tel:active{opacity:.85;transform:scale(.98)}
+.tel-hours{margin-top:10px;font-size:13px;color:#4b5563;font-weight:600;text-align:center}
+nav.tabs{height:68px;background:#fff;display:flex;box-shadow:0 -1px 0 #e5e7eb,0 -4px 20px rgba(0,0,0,.07);z-index:50;flex-shrink:0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.2px;transition:color .15s;color:#4b5563}
+.tab .ico{font-size:24px;line-height:1}
+.tab.on{color:#1a3a2a}
+.tab.on .ico{filter:drop-shadow(0 0 4px rgba(26,58,42,.3))}
+.hidden{display:none}
+.u{background:#5d4037}.p{background:#e6a817;color:#1a1a1a!important}.c2{background:#1155cc}.v{background:#2e7d32}.s2{background:#546e7a}.n{background:#e9ecef;color:#4b5563!important}
+</style>
 </head>
 <body>
-
 <header>
-  <span class="header-icon">♻️</span>
-  <div>
+  <div class="logo">♻️</div>
+  <div style="flex:1;min-width:0">
     <h1>Raccolta Differenziata</h1>
     <p>San Gavino Monreale — 2026</p>
   </div>
 </header>
-
-<div id="view-oggi" class="view active">
-
-  <div class="card">
-    <div class="card-label">Oggi</div>
-    <div id="oggi-date" class="card-date"></div>
-    <div id="oggi-content"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-label">Domani</div>
-    <div id="domani-date" class="card-date"></div>
-    <div id="domani-content"></div>
-    <div class="avviso" id="avviso-domani" style="display:none">
-      <span class="avviso-icon">⏰</span>
-      <span>Esporre il rifiuto <strong>dopo le 22:00</strong> di questa sera oppure entro le <strong>05:00</strong> del mattino del giorno di raccolta</span>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-label">Legenda colori</div>
-    <div class="legend">
-      <div class="leg-item"><div class="leg-dot umido"></div>Umido</div>
-      <div class="leg-item"><div class="leg-dot plastica"></div>Plastica</div>
-      <div class="leg-item"><div class="leg-dot carta"></div>Carta</div>
-      <div class="leg-item"><div class="leg-dot vetro"></div>Vetro e Lattine</div>
-      <div class="leg-item"><div class="leg-dot secco"></div>Secco</div>
-    </div>
-  </div>
-
-</div>
-
-<div id="view-mese" class="view">
-  <div class="month-nav">
-    <button class="nav-btn" id="btn-prev" onclick="changeMonth(-1)">‹</button>
-    <h2 id="month-title"></h2>
-    <button class="nav-btn" id="btn-next" onclick="changeMonth(1)">›</button>
-  </div>
-  <div class="cal-wrapper">
-    <div class="cal-header">
-      <div class="cal-dh">Lun</div>
-      <div class="cal-dh">Mar</div>
-      <div class="cal-dh">Mer</div>
-      <div class="cal-dh">Gio</div>
-      <div class="cal-dh">Ven</div>
-      <div class="cal-dh">Sab</div>
-      <div class="cal-dh">Dom</div>
-    </div>
-    <div class="cal-body" id="cal-body"></div>
-  </div>
-</div>
-
-<div id="view-impostazioni" class="view">
-
-  <div class="card">
-    <div class="card-label">🔔 Notifiche serali</div>
-    <p style="font-size:.76rem;color:var(--muted);line-height:1.5;margin-bottom:12px;font-weight:600">
-      Ricevi una notifica ogni sera per ricordarti quale rifiuto esporre il giorno dopo.
-    </p>
-    <div class="setting-row">
-      <div>
-        <div class="setting-lbl">Orario notifica</div>
-        <div class="setting-sub">Reminder per la raccolta del giorno dopo</div>
-      </div>
-      <input type="time" id="notif-time" value="21:00">
-    </div>
-    <button class="btn btn-primary" onclick="attivaNotifiche()">🔔 Attiva / Aggiorna Notifiche</button>
-    <button class="btn" style="background:#f3f4f6;color:var(--text);margin-top:8px" onclick="disattivaNotifiche()">Disattiva</button>
-    <div class="notif-msg" id="notif-msg"></div>
-    <p style="font-size:.68rem;color:var(--muted);margin-top:10px;line-height:1.4;font-weight:600">
-      ⚠️ Per ricevere notifiche anche con l'app in background, l'app deve essere installata e aperta almeno una volta al giorno.
-    </p>
-  </div>
-
-  <div class="card">
-    <div class="card-label">📋 Prossime raccolte</div>
-    <div id="prox-list"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-label">ℹ️ Informazioni</div>
-    <div class="info-row">
-      <strong>Unione dei Comuni Terre del Campidano</strong><br>
-      Raccolta Differenziata 2026 — Utenze Domestiche<br><br>
-      Gestore: <strong>Formula Ambiente S.p.A.</strong><br>
-      Numero Verde: <strong>800 774 711</strong><br>
-      Lun–Sab ore 9:00–13:00
-    </div>
-  </div>
-
-</div>
-
-<nav class="tab-bar">
-  <button class="tab active" id="tab-oggi" onclick="showView('oggi',this)">
-    <span class="tab-icon">🏠</span>Oggi
-  </button>
-  <button class="tab" id="tab-mese" onclick="showView('mese',this)">
-    <span class="tab-icon">📅</span>Mese
-  </button>
-  <button class="tab" id="tab-impostazioni" onclick="showView('impostazioni',this)">
-    <span class="tab-icon">⚙️</span>Impost.
-  </button>
+<main id="main"></main>
+<nav class="tabs">
+  <button class="tab on" data-tab="oggi"><span class="ico">🏠</span>Oggi</button>
+  <button class="tab" data-tab="mese"><span class="ico">📅</span>Mese</button>
+  <button class="tab" data-tab="impost"><span class="ico">⚙️</span>Impost.</button>
 </nav>
-
 <script>
-const U='umido', P='plastica', C='carta', V='vetro e lattine', S='secco', _=null;
+const U='umido',P='plastica',C='carta',V='vetro e lattine',S='secco',_=null;
+const CALENDARIO={
+ 5:[_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_],
+ 6:[U,_,C,U,S,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U],
+ 7:[S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_],
+ 8:[U,_,_,U,P,U,_,U,_,U,C,U,S,U,_,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V],
+ 9:[U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P],
+ 10:[U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U],
+ 11:[_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C],
+ 12:[U,S,U,_,U,_,U,_,V,U,P,U,_,C,U,S,U,_,U,_,V,U,P,U,_,_,_,C,U,S,U]};
+const MESI_IT=['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const ICONS={umido:'🍃',plastica:'♻️',carta:'📄','vetro e lattine':'🍶',secco:'🗑️'};
+const CLS={umido:'u',plastica:'p',carta:'c2','vetro e lattine':'v',secco:'s2'};
+const COLORI={umido:'#5d4037',plastica:'#e6a817',carta:'#1155cc','vetro e lattine':'#2e7d32',secco:'#546e7a'};
+const MESI_DISP=[5,6,7,8,9,10,11,12];
+const getR=(m,d)=>{const a=CALENDARIO[m];return a?(a[d-1]||null):null};
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const fmtLong=d=>cap(d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}));
+const fmtShort=d=>cap(d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}));
+function prossime(from,limit=8){const out=[];for(let off=1;off<=45&&out.length<limit;off++){const d=new Date(from);d.setDate(from.getDate()+off);if(d.getFullYear()!==2026)continue;const r=getR(d.getMonth()+1,d.getDate());if(r)out.push({date:d,rifiuto:r})}return out}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
-const CALENDARIO = {
-  4:  [P,U,_,U,_,U,_,C,U,S,U,_,V,U,P,U,_,U,_,U,C,U,S,U,_,_,V,U,P,U],
-  5:  [_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_],
-  6:  [U,_,C,U,S,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U],
-  7:  [S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_],
-  8:  [U,_,_,U,P,U,_,U,_,U,C,U,S,U,_,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V],
-  9:  [U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P],
-  10: [U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U],
-  11: [_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C,U,S,U,_,U,_,V,U,P,U,_,U,_,C],
-  12: [U,S,U,_,U,_,U,_,V,U,P,U,_,C,U,S,U,_,U,_,V,U,P,U,_,_,_,C,U,S,U]
-};
+const oggi=new Date();
+let meseSel=(oggi.getFullYear()===2026&&CALENDARIO[oggi.getMonth()+1])?oggi.getMonth()+1:5;
+let tab=localStorage.getItem('sgm2-tab')||'oggi';
+let notifOn=localStorage.getItem('sgm2-notif-on')==='1';
+let notifTime=localStorage.getItem('sgm2-notif-time')||'21:00';
+let msg=null;
+if(localStorage.getItem('sgm2-testo-lg')==='1')document.body.classList.add('testo-lg');
 
-const MESI_IT = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-                 'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-
-const ICONS = { umido:'🍃', plastica:'♻️', carta:'📄', 'vetro e lattine':'🍶', secco:'🗑️' };
-const MESI_DISP = [4,5,6,7,8,9,10,11,12];
-
-function getRifiuto(mese, giorno) {
-  const arr = CALENDARIO[mese];
-  return arr ? (arr[giorno - 1] || null) : null;
+function pillHTML(r,big){
+  if(!r)return `<div class="pill n" style="background:#e9ecef">✕ Nessuna raccolta</div>`;
+  return `<div class="pill ${CLS[r]}"><span class="ico">${ICONS[r]}</span>${esc(cap(r))}</div>`;
 }
+function avvisoHTML(){return `<div class="avviso"><span class="ico">⏰</span><span>Esporre il rifiuto dopo le <strong>22:00</strong> di questa sera oppure entro le <strong>05:00</strong> del mattino del giorno di raccolta</span></div>`}
+function legendaHTML(cls){return Object.keys(COLORI).map(r=>`<div class="leg-item"><span class="leg-dot" style="background:${COLORI[r]}"></span>${esc(cap(r))}</div>`).join('')}
 
-function clsOf(r) {
-  if (!r) return 'nessuno';
-  return r === 'vetro e lattine' ? 'vetro' : r;
-}
-
-function makePill(r) {
-  if (!r) return `<span class="rifiuto-pill nessuno">✕ Nessuna raccolta</span>`;
-  const cls = clsOf(r);
-  const cap = r.charAt(0).toUpperCase() + r.slice(1);
-  return `<span class="rifiuto-pill ${cls}">${ICONS[r]} ${cap}</span>`;
-}
-
-function renderOggi() {
-  const oggi = new Date();
-  const domani = new Date();
-  domani.setDate(oggi.getDate() + 1);
-
-  const fmt = d => d.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
-  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-  document.getElementById('oggi-date').textContent = cap(fmt(oggi));
-  document.getElementById('domani-date').textContent = cap(fmt(domani));
-
-  const rO = oggi.getFullYear() === 2026 ? getRifiuto(oggi.getMonth()+1, oggi.getDate()) : null;
-  const rD = domani.getFullYear() === 2026 ? getRifiuto(domani.getMonth()+1, domani.getDate()) : null;
-
-  document.getElementById('oggi-content').innerHTML = makePill(rO);
-  document.getElementById('domani-content').innerHTML = makePill(rD);
-  document.getElementById('avviso-domani').style.display = rD ? 'flex' : 'none';
-}
-
-let currentMonthIdx = 0;
-
-function initMonthIdx() {
-  const m = new Date().getMonth() + 1;
-  const idx = MESI_DISP.indexOf(m);
-  currentMonthIdx = idx >= 0 ? idx : 0;
-}
-
-function changeMonth(delta) {
-  const ni = currentMonthIdx + delta;
-  if (ni < 0 || ni >= MESI_DISP.length) return;
-  currentMonthIdx = ni;
-  renderCalendar();
-}
-
-function renderCalendar() {
-  const m = MESI_DISP[currentMonthIdx];
-  document.getElementById('month-title').textContent = MESI_IT[m] + ' 2026';
-  document.getElementById('btn-prev').disabled = currentMonthIdx === 0;
-  document.getElementById('btn-next').disabled = currentMonthIdx === MESI_DISP.length - 1;
-
-  const daysInMonth = new Date(2026, m, 0).getDate();
-  const firstDow    = new Date(2026, m - 1, 1).getDay();
-  const startOffset = firstDow === 0 ? 6 : firstDow - 1;
-
-  const todayM = new Date().getMonth() + 1;
-  const todayD = new Date().getDate();
-
-  let html = '';
-  for (let i = 0; i < startOffset; i++) html += '<div class="cal-cell empty"></div>';
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dow   = new Date(2026, m - 1, d).getDay();
-    const isDom = dow === 0;
-    const isTod = m === todayM && d === todayD;
-    const r     = getRifiuto(m, d);
-    const cls   = clsOf(r);
-
-    let classes = 'cal-cell';
-    if (isDom) classes += ' is-dom';
-    if (isTod) classes += ' is-today';
-
-    html += `<div class="${classes}"><span class="cal-num">${d}</span>`;
-    if (r) {
-      const label = r === 'vetro e lattine' ? 'vetro' : r;
-      html += `<span class="cal-chip ${cls}">${label}</span>`;
-    }
-    html += '</div>';
+function viewOggi(){
+  const dom=new Date(oggi);dom.setDate(oggi.getDate()+1);
+  const inRange=oggi.getFullYear()===2026;
+  const rO=inRange?getR(oggi.getMonth()+1,oggi.getDate()):null;
+  const rD=dom.getFullYear()===2026?getR(dom.getMonth()+1,dom.getDate()):null;
+  let domCard;
+  if(rD){
+    domCard=`<div class="card"><div class="lbl">Domani — esponi stasera</div><div class="data">${fmtLong(dom)}</div>
+    <div class="blocco ${CLS[rD]}"><span class="ico">${ICONS[rD]}</span><div><div class="nome">${esc(cap(rD))}</div><div class="sub">Esponi dopo le 22:00</div></div></div>${avvisoHTML()}</div>`;
+  }else{
+    domCard=`<div class="card"><div class="lbl">Domani</div><div class="data">${fmtLong(dom)}</div>${pillHTML(null)}</div>`;
   }
-
-  document.getElementById('cal-body').innerHTML = html;
+  return `<div class="card"><div class="lbl">Oggi</div><div class="data">${fmtLong(oggi)}</div>${pillHTML(rO)}</div>
+  ${domCard}
+  <div class="card"><div class="lbl">Legenda colori</div><div class="legenda">${legendaHTML()}</div></div>`;
 }
 
-function renderProssime() {
-  const oggi = new Date();
-  let html = '', count = 0;
-  for (let off = 1; off <= 45 && count < 8; off++) {
-    const d = new Date(oggi);
-    d.setDate(oggi.getDate() + off);
-    if (d.getFullYear() !== 2026) continue;
-    const m = d.getMonth() + 1;
-    const g = d.getDate();
-    const r = getRifiuto(m, g);
-    if (!r) continue;
-    const cls = clsOf(r);
-    const fmt = d.toLocaleDateString('it-IT', {weekday:'short', day:'numeric', month:'short'});
-    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-    html += `<div class="prox-item">
-      <span class="prox-date">${cap(fmt)}</span>
-      <span class="prox-chip ${cls}">${ICONS[r]} ${r}</span>
-    </div>`;
-    count++;
+function viewMese(){
+  const idx=MESI_DISP.indexOf(meseSel);
+  const n=new Date(2026,meseSel,0).getDate();
+  const primo=(new Date(2026,meseSel-1,1).getDay()+6)%7;
+  let cells='';
+  for(let i=0;i<primo;i++)cells+=`<div class="cell vuota"></div>`;
+  for(let g=1;g<=n;g++){
+    const d=new Date(2026,meseSel-1,g);
+    const isDom=d.getDay()===0;
+    const isToday=oggi.getFullYear()===2026&&meseSel===oggi.getMonth()+1&&g===oggi.getDate();
+    const r=getR(meseSel,g);
+    const chip=r?`<span class="chip ${CLS[r]}">${esc(r==='vetro e lattine'?'Vetro':cap(r))}</span>`:'';
+    cells+=`<div class="cell${isDom?' dom':''}${isToday?' oggi':''}"><span class="num">${g}</span>${chip}</div>`;
   }
-  document.getElementById('prox-list').innerHTML = html || '<p style="color:var(--muted);font-size:.8rem;font-weight:600">Nessuna raccolta nelle prossime settimane</p>';
+  const dhs=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map((x,i)=>`<div class="cal-dh${i===6?' dom':''}">${x}</div>`).join('');
+  return `<div class="mese-nav"><button class="nav-btn" id="prev" ${idx===0?'disabled':''}>‹</button><h2>${MESI_IT[meseSel]} 2026</h2><button class="nav-btn" id="next" ${idx===MESI_DISP.length-1?'disabled':''}>›</button></div>
+  <div class="cal"><div class="cal-head">${dhs}</div><div class="cal-body">${cells}</div></div>
+  <div class="card" style="padding:14px 18px"><div class="leg-inline">${legendaHTML()}</div></div>`;
 }
 
-function showView(name, el) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  el.classList.add('active');
-  if (name === 'mese')         renderCalendar();
-  if (name === 'impostazioni') renderProssime();
+function viewImpost(){
+  const up=prossime(oggi,8).map(({date,rifiuto})=>`<div class="prox"><span class="d">${fmtShort(date)}</span><span class="c ${CLS[rifiuto]}">${ICONS[rifiuto]} ${esc(rifiuto==='vetro e lattine'?'Vetro e lattine':cap(rifiuto))}</span></div>`).join('')||`<p class="helper">Nessuna raccolta nelle prossime settimane</p>`;
+  const testoLg=document.body.classList.contains('testo-lg');
+  return `<div class="card"><div class="lbl" style="margin-bottom:10px">🔔 Notifiche serali</div>
+    <p class="helper">Ricevi una notifica ogni sera per ricordarti quale rifiuto esporre il giorno dopo.</p>
+    <div class="riga"><div><div class="t">Promemoria serale</div><div class="s">${notifOn?'Attivo':'Disattivato'}</div></div>
+      <button class="switch${notifOn?' on':''}" id="sw-notif" role="switch" aria-checked="${notifOn}" aria-label="Promemoria serale"><span class="knob"></span></button></div>
+    ${notifOn?`<div class="riga"><div><div class="t">Orario notifica</div><div class="s">Ogni sera, per la raccolta di domani</div></div>
+      <input type="time" id="orario" value="${notifTime}"></div>`:''}
+    ${msg?`<div class="msg ${msg.kind}">${msg.text}</div>`:''}
+    <p class="fineprint">⚠️ Per ricevere notifiche anche con l'app in background, l'app deve essere installata e aperta almeno una volta al giorno.</p>
+  </div>
+  <div class="card"><div class="lbl" style="margin-bottom:6px">👁 Accessibilità</div>
+    <div class="riga" style="border:none;padding-bottom:2px"><div><div class="t">Testo grande</div><div class="s">Ingrandisce tutti i testi dell'app</div></div>
+      <button class="switch${testoLg?' on':''}" id="sw-testo" role="switch" aria-checked="${testoLg}" aria-label="Testo grande"><span class="knob"></span></button></div>
+  </div>
+  <div class="card"><div class="lbl" style="margin-bottom:8px">📋 Prossime raccolte</div>${up}</div>
+  <div class="card"><div class="lbl" style="margin-bottom:10px">ℹ️ Informazioni</div>
+    <div class="info"><strong>Unione dei Comuni Terre del Campidano</strong><br>Raccolta Differenziata 2026 — Utenze Domestiche<br><br>Gestore: <strong>Formula Ambiente S.p.A.</strong></div>
+    <a class="tel" href="tel:800774711">📞 Numero Verde 800 774 711</a>
+    <p class="tel-hours">Lun–Sab ore 9:00–13:00</p>
+  </div>`;
 }
 
-const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-function buildNotificationsList(timeStr, daysAhead = 60) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const now = new Date();
-  const list = [];
-
-  for (let off = 0; off < daysAhead; off++) {
-    const trigger = new Date(now);
-    trigger.setDate(now.getDate() + off);
-    trigger.setHours(h, m, 0, 0);
-    if (trigger <= now) continue;
-
-    const dom = new Date(trigger);
-    dom.setDate(trigger.getDate() + 1);
-    if (dom.getFullYear() !== 2026) continue;
-
-    const r = getRifiuto(dom.getMonth() + 1, dom.getDate());
-    if (!r) continue;
-
-    const fmt = dom.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
-    const key = `${trigger.getFullYear()}-${String(trigger.getMonth()+1).padStart(2,'0')}-${String(trigger.getDate()).padStart(2,'0')}`;
-
-    list.push({
-      title: '♻️ Raccolta Rifiuti',
-      body: `${cap(fmt)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`,
-      tag: `rifiuti-${key}`,
-      timestamp: trigger.getTime(),
-      icon: 'icon.svg'
-    });
+const main=document.getElementById('main');
+function render(){
+  main.innerHTML=tab==='oggi'?viewOggi():tab==='mese'?viewMese():viewImpost();
+  main.scrollTop=0;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  if(tab==='mese'){
+    const idx=MESI_DISP.indexOf(meseSel);
+    const prev=document.getElementById('prev'),next=document.getElementById('next');
+    if(prev)prev.onclick=()=>{if(idx>0){meseSel=MESI_DISP[idx-1];render()}};
+    if(next)next.onclick=()=>{if(idx<MESI_DISP.length-1){meseSel=MESI_DISP[idx+1];render()}};
   }
-  return list;
-}
-
-function postToSW(msg) {
-  return navigator.serviceWorker.ready.then(reg => {
-    const target = reg.active || navigator.serviceWorker.controller;
-    if (target) target.postMessage(msg);
-    return reg;
-  });
-}
-
-async function scheduleAllNotifications(timeStr) {
-  if (!('serviceWorker' in navigator)) return { supported: false, count: 0 };
-  const reg = await navigator.serviceWorker.ready;
-  const target = reg.active || navigator.serviceWorker.controller;
-  if (!target) return { supported: false, count: 0 };
-
-  const notifications = buildNotificationsList(timeStr);
-
-  return new Promise((resolve) => {
-    const channel = new MessageChannel();
-    const timeout = setTimeout(() => resolve({ supported: false, count: 0 }), 5000);
-    channel.port1.onmessage = (e) => {
-      clearTimeout(timeout);
-      if (e.data && e.data.type === 'SCHEDULE_RESULT') {
-        resolve({ supported: !!e.data.supported, count: e.data.count || 0 });
-      }
+  if(tab==='impost'){
+    const swN=document.getElementById('sw-notif');
+    swN.onclick=async()=>{
+      if(!notifOn){
+        if(!('Notification' in window)){msg={kind:'err',text:'✕ Il tuo browser non supporta le notifiche'};render();return}
+        const perm=await Notification.requestPermission();
+        if(perm!=='granted'){msg={kind:'warn',text:'⚠️ Permesso notifiche negato: attivalo dalle impostazioni del browser'};render();return}
+        notifOn=true;msg={kind:'ok',text:`✓ Notifica attiva ogni sera alle ${notifTime}`};
+      }else{notifOn=false;msg=null}
+      localStorage.setItem('sgm2-notif-on',notifOn?'1':'0');
+      pianifica();render();
     };
-    target.postMessage({ type: 'SCHEDULE_NOTIFICATIONS', notifications }, [channel.port2]);
-  });
-}
-
-async function catchUpNotification() {
-  const timeStr = localStorage.getItem('notif-time');
-  const active = localStorage.getItem('notif-active') === '1';
-  if (!timeStr || !active) return;
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-  const now = new Date();
-  const todayKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  if (localStorage.getItem('notif-last-shown') === todayKey) return;
-
-  const [h, m] = timeStr.split(':').map(Number);
-  const target = new Date(now);
-  target.setHours(h, m, 0, 0);
-  if (now < target) return;
-
-  const dom = new Date(now);
-  dom.setDate(now.getDate() + 1);
-  if (dom.getFullYear() !== 2026) return;
-  const r = getRifiuto(dom.getMonth() + 1, dom.getDate());
-  if (!r) return;
-
-  const fmt = dom.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
-  await postToSW({
-    type: 'SHOW_NOW',
-    title: '♻️ Raccolta Rifiuti (recupero)',
-    body: `${cap(fmt)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`,
-    tag: `rifiuti-catchup-${todayKey}`,
-    icon: 'icon.svg'
-  });
-  localStorage.setItem('notif-last-shown', todayKey);
-}
-
-async function attivaNotifiche() {
-  const msgEl = document.getElementById('notif-msg');
-  msgEl.style.display = 'block';
-
-  if (!('Notification' in window)) {
-    msgEl.className = 'notif-msg err';
-    msgEl.textContent = '✕ Il tuo browser non supporta le notifiche';
-    return;
-  }
-
-  let perm = Notification.permission;
-  if (perm === 'default') perm = await Notification.requestPermission();
-
-  const timeStr = document.getElementById('notif-time').value || '21:00';
-
-  if (perm !== 'granted') {
-    if (perm === 'denied') {
-      msgEl.className = 'notif-msg err';
-      msgEl.textContent = '✕ Permesso negato. Abilita le notifiche nelle impostazioni del browser.';
-    } else {
-      msgEl.className = 'notif-msg warn';
-      msgEl.textContent = '⚠ Permesso notifiche non concesso.';
-    }
-    return;
-  }
-
-  localStorage.setItem('notif-time', timeStr);
-  localStorage.setItem('notif-active', '1');
-
-  const { supported, count } = await scheduleAllNotifications(timeStr);
-
-  if (supported && count > 0) {
-    msgEl.className = 'notif-msg ok';
-    msgEl.textContent = `✓ Programmate ${count} notifiche. Riceverai un avviso ogni sera alle ${timeStr}, anche ad app chiusa.`;
-  } else if (supported) {
-    msgEl.className = 'notif-msg warn';
-    msgEl.textContent = `⚠ Nessuna raccolta da notificare nei prossimi 60 giorni.`;
-  } else {
-    msgEl.className = 'notif-msg warn';
-    msgEl.textContent = `⚠ Notifiche attive alle ${timeStr}, ma il browser non supporta la programmazione in background (tipico di iOS/Safari). Apri l'app ogni giorno per vedere il promemoria.`;
+    const or=document.getElementById('orario');
+    if(or)or.onchange=e=>{notifTime=e.target.value;localStorage.setItem('sgm2-notif-time',notifTime);msg={kind:'ok',text:`✓ Notifica attiva ogni sera alle ${notifTime}`};pianifica();render()};
+    document.getElementById('sw-testo').onclick=()=>{
+      const on=document.body.classList.toggle('testo-lg');
+      localStorage.setItem('sgm2-testo-lg',on?'1':'0');render();
+    };
   }
 }
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;localStorage.setItem('sgm2-tab',tab);render()});
 
-async function disattivaNotifiche() {
-  localStorage.removeItem('notif-active');
-  await postToSW({ type: 'CANCEL_NOTIFICATIONS' });
-  const msgEl = document.getElementById('notif-msg');
-  msgEl.style.display = 'block';
-  msgEl.className = 'notif-msg warn';
-  msgEl.textContent = 'Notifiche disattivate.';
+let notifTimer=null;
+function pianifica(){
+  if(notifTimer)clearTimeout(notifTimer);
+  if(!notifOn||Notification.permission!=='granted')return;
+  const [h,m]=notifTime.split(':').map(Number);
+  const now=new Date();
+  const target=new Date(now);target.setHours(h,m,0,0);
+  if(target<=now)target.setDate(target.getDate()+1);
+  notifTimer=setTimeout(()=>{
+    const dom=new Date();dom.setDate(dom.getDate()+1);
+    const r=dom.getFullYear()===2026?getR(dom.getMonth()+1,dom.getDate()):null;
+    const body=r?`${fmtLong(dom)}: porta fuori ${ICONS[r]} ${r}\nEsponi dopo le 22:00`:`${fmtLong(dom)}: nessuna raccolta domani`;
+    (async()=>{
+      try{
+        const reg=await navigator.serviceWorker.getRegistration();
+        if(reg)await reg.showNotification('♻️ Raccolta Rifiuti',{body,icon:'icon-192.png',badge:'icon-192.png'});
+        else new Notification('♻️ Raccolta Rifiuti',{body,icon:'icon-192.png'});
+      }catch(e){}
+    })();
+    pianifica();
+  },target-now);
 }
-
-document.addEventListener('DOMContentLoaded', async () => {
-  renderOggi();
-  initMonthIdx();
-
-  const savedTime = localStorage.getItem('notif-time');
-  if (savedTime) document.getElementById('notif-time').value = savedTime;
-
-  if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('sw.js');
-      await navigator.serviceWorker.ready;
-    } catch (e) {
-      console.warn('SW:', e);
-    }
-  }
-
-  if (localStorage.getItem('notif-active') === '1' &&
-      'Notification' in window &&
-      Notification.permission === 'granted') {
-    await catchUpNotification();
-    scheduleAllNotifications(savedTime || '21:00');
-  }
-});
+pianifica();
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
